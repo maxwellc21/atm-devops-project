@@ -1,0 +1,321 @@
+<div class="hero">
+  <h1>Week 3 — Transaction Service</h1>
+  <p>Record deposits, withdrawals and transaction history</p>
+</div>
+<h1 id="week-3-lab-worksheet-transaction-service-full-data-tracking">📘 Week 3 Lab Worksheet — Transaction Service + Full Data Tracking</h1>
+<h2 id="record-every-deposit-and-withdrawal">📊 Record every deposit and withdrawal</h2>
+<hr>
+<h1 id="objective">🎯 Objective</h1>
+<p>By the end of Week 3, you will:</p>
+<ul>
+<li>create the Transaction Service</li>
+<li>store all deposits and withdrawals in MongoDB</li>
+<li>retrieve transaction history</li>
+<li>sort transactions newest first</li>
+<li>test the Transaction Service directly</li>
+</ul>
+<hr>
+<h1 id="success-criteria">✅ Success Criteria</h1>
+<p>You have successfully completed Week 3 if:</p>
+<ul>
+<li>Transaction Service runs on port 4003</li>
+<li>transactions can be created</li>
+<li>transaction history can be retrieved</li>
+<li>history is sorted newest first</li>
+<li>all records are stored in MongoDB</li>
+</ul>
+<hr>
+<h1 id="week-3-data-flow">🧠 Week 3 Data Flow</h1>
+<pre><code>Deposit or Withdraw
+   ↓
+Create Transaction Record
+   ↓
+Save to MongoDB
+   ↓
+Retrieve Transaction History</code></pre>
+<hr>
+<h1 id="required-folder-structure">📁 Required Folder Structure</h1>
+<pre><code>transaction-service/
+├── .env
+├── package.json
+└── src/
+    ├── app.js
+    ├── controllers/
+    │   └── transactionController.js
+    ├── models/
+    │   └── Transaction.js
+    └── routes/
+        └── transactionRoutes.js</code></pre>
+<hr>
+<h1 id="task-1-create-transaction-service-mvc">🟦 Task 1 — Create Transaction Service MVC</h1>
+<p>Go to the transaction service:</p>
+<pre><code>cd transaction-service
+mkdir -p src/models src/controllers src/routes</code></pre>
+<h2 id="create-env">Create `.env`</h2>
+<h3 id="file-transaction-service-env">File: `transaction-service/.env`</h3>
+<pre><code>PORT=4003
+MONGO_URI=mongodb://localhost:27017/atmdb</code></pre>
+<hr>
+<h2 id="update-package-json">Update `package.json`</h2>
+<h3 id="file-transaction-service-package-json">File: `transaction-service/package.json`</h3>
+<pre><code>{
+  &quot;name&quot;: &quot;transaction-service&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;main&quot;: &quot;src/app.js&quot;,
+  &quot;scripts&quot;: {
+    &quot;start&quot;: &quot;node src/app.js&quot;,
+    &quot;dev&quot;: &quot;node src/app.js&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;cors&quot;: &quot;^2.8.5&quot;,
+    &quot;dotenv&quot;: &quot;^16.4.5&quot;,
+    &quot;express&quot;: &quot;^4.19.2&quot;,
+    &quot;mongoose&quot;: &quot;^8.5.1&quot;
+  }
+}</code></pre>
+<hr>
+<h2 id="create-transaction-model">Create Transaction model</h2>
+<h3 id="file-transaction-service-src-models-transaction-js">File: `transaction-service/src/models/Transaction.js`</h3>
+<pre><code>const mongoose = require(&quot;mongoose&quot;);
+
+const transactionSchema = new mongoose.Schema(
+  {
+    accountNumber: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    type: {
+      type: String,
+      required: true,
+      enum: [&quot;deposit&quot;, &quot;withdraw&quot;]
+    },
+    amount: {
+      type: Number,
+      required: true
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  },
+  {
+    timestamps: true
+  }
+);
+
+module.exports = mongoose.model(&quot;Transaction&quot;, transactionSchema);</code></pre>
+<h3 id="what-this-does">What this does</h3>
+<ul>
+<li>stores account number</li>
+<li>stores whether the transaction is <code>deposit</code> or <code>withdraw</code></li>
+<li>stores the amount</li>
+<li>stores a timestamp</li>
+</ul>
+<hr>
+<h2 id="create-transaction-controller">Create Transaction controller</h2>
+<h3 id="file-transaction-service-src-controllers-transactioncontroller-js">File: `transaction-service/src/controllers/transactionController.js`</h3>
+<pre><code>const Transaction = require(&quot;../models/Transaction&quot;);
+
+exports.createTransaction = async (req, res) =&gt; {
+  try {
+    const { accountNumber, type, amount } = req.body;
+
+    if (!accountNumber || !type || amount === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: &quot;Account number, type, and amount are required&quot;
+      });
+    }
+
+    const numericAmount = Number(amount);
+
+    if (Number.isNaN(numericAmount) || numericAmount &lt;= 0) {
+      return res.status(400).json({
+        success: false,
+        message: &quot;Amount must be a number greater than 0&quot;
+      });
+    }
+
+    const transaction = await Transaction.create({
+      accountNumber,
+      type,
+      amount: numericAmount
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: &quot;Transaction created successfully&quot;,
+      transaction
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: &quot;Failed to create transaction&quot;,
+      error: error.message
+    });
+  }
+};
+
+exports.getTransactionsByAccount = async (req, res) =&gt; {
+  try {
+    const { accountNumber } = req.params;
+
+    const transactions = await Transaction.find({ accountNumber }).sort({
+      timestamp: -1
+    });
+
+    return res.json({
+      success: true,
+      count: transactions.length,
+      transactions
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: &quot;Failed to retrieve transactions&quot;,
+      error: error.message
+    });
+  }
+};</code></pre>
+<hr>
+<h2 id="create-transaction-routes">Create Transaction routes</h2>
+<h3 id="file-transaction-service-src-routes-transactionroutes-js">File: `transaction-service/src/routes/transactionRoutes.js`</h3>
+<pre><code>const express = require(&quot;express&quot;);
+const router = express.Router();
+const transactionController = require(&quot;../controllers/transactionController&quot;);
+
+router.post(&quot;/&quot;, transactionController.createTransaction);
+router.get(&quot;/:accountNumber&quot;, transactionController.getTransactionsByAccount);
+
+module.exports = router;</code></pre>
+<hr>
+<h2 id="create-transaction-app">Create Transaction app</h2>
+<h3 id="file-transaction-service-src-app-js">File: `transaction-service/src/app.js`</h3>
+<pre><code>const express = require(&quot;express&quot;);
+const cors = require(&quot;cors&quot;);
+const dotenv = require(&quot;dotenv&quot;);
+const mongoose = require(&quot;mongoose&quot;);
+const transactionRoutes = require(&quot;./routes/transactionRoutes&quot;);
+
+dotenv.config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() =&gt; console.log(&quot;✅ Transaction Service connected to MongoDB&quot;))
+  .catch((err) =&gt; console.error(&quot;❌ Transaction Service MongoDB error:&quot;, err));
+
+app.get(&quot;/health&quot;, (req, res) =&gt; {
+  res.json({
+    service: &quot;transaction-service&quot;,
+    status: &quot;running&quot;
+  });
+});
+
+app.use(&quot;/api/transactions&quot;, transactionRoutes);
+
+app.listen(process.env.PORT, () =&gt; {
+  console.log(`🚀 Transaction Service running on port ${process.env.PORT}`);
+});</code></pre>
+<hr>
+<h1 id="task-2-start-transaction-service">🟦 Task 2 — Start Transaction Service</h1>
+<pre><code>cd transaction-service
+npm start</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Transaction Service is running on port 4003</li>
+<li>[ ] <code>/health</code> works</li>
+</ul>
+<hr>
+<h1 id="task-3-test-transaction-creation">🟦 Task 3 — Test Transaction Creation</h1>
+<h2 id="request">Request</h2>
+<pre><code>POST http://localhost:4003/api/transactions
+Content-Type: application/json</code></pre>
+<h2 id="body">Body</h2>
+<pre><code>{
+  &quot;accountNumber&quot;: &quot;ACC001&quot;,
+  &quot;type&quot;: &quot;deposit&quot;,
+  &quot;amount&quot;: 250
+}</code></pre>
+<h2 id="expected-result">Expected result</h2>
+<pre><code>{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Transaction created successfully&quot;,
+  &quot;transaction&quot;: {
+    &quot;accountNumber&quot;: &quot;ACC001&quot;,
+    &quot;type&quot;: &quot;deposit&quot;,
+    &quot;amount&quot;: 250
+  }
+}</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Transaction created successfully</li>
+<li>[ ] Record exists in MongoDB</li>
+</ul>
+<hr>
+<h1 id="task-4-test-transaction-history">🟦 Task 4 — Test Transaction History</h1>
+<h2 id="request">Request</h2>
+<pre><code>GET http://localhost:4003/api/transactions/ACC001</code></pre>
+<h2 id="expected-result">Expected result</h2>
+<p>A list of transactions sorted by newest first.</p>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] History endpoint works</li>
+<li>[ ] Transactions are sorted descending by timestamp</li>
+</ul>
+<hr>
+<h1 id="task-5-create-sample-data">🟦 Task 5 — Create Sample Data</h1>
+<p>Create several sample transactions by repeating POST requests:</p>
+<h3 id="deposit">Deposit</h3>
+<pre><code>{
+  &quot;accountNumber&quot;: &quot;ACC001&quot;,
+  &quot;type&quot;: &quot;deposit&quot;,
+  &quot;amount&quot;: 100
+}</code></pre>
+<h3 id="withdraw">Withdraw</h3>
+<pre><code>{
+  &quot;accountNumber&quot;: &quot;ACC001&quot;,
+  &quot;type&quot;: &quot;withdraw&quot;,
+  &quot;amount&quot;: 50
+}</code></pre>
+<h3 id="deposit">Deposit</h3>
+<pre><code>{
+  &quot;accountNumber&quot;: &quot;ACC001&quot;,
+  &quot;type&quot;: &quot;deposit&quot;,
+  &quot;amount&quot;: 300
+}</code></pre>
+<p>Then re-test history.</p>
+<hr>
+<h1 id="reflection-questions">🧪 Reflection Questions</h1>
+<ol>
+<li>Why should transactions be stored separately from account balance?</li>
+<li>Why is transaction history sorted newest first?</li>
+<li>Why is the `type` field restricted to `deposit` and `withdraw`?</li>
+<li>What is the difference between current balance and transaction history?</li>
+</ol>
+<hr>
+<h1 id="milestone-gateway-must-pass">🚧 Milestone Gateway (Must Pass)</h1>
+<p>Before moving to Week 4:</p>
+<ul>
+<li>[ ] Transaction Service uses MVC</li>
+<li>[ ] Transaction model is created</li>
+<li>[ ] Transaction creation works</li>
+<li>[ ] Transaction history retrieval works</li>
+<li>[ ] Transactions are stored in MongoDB</li>
+<li>[ ] Results are sorted newest first</li>
+<li>[ ] Code committed to Git</li>
+</ul>
+<hr>
+<h1 id="final-note">🎯 Final Note</h1>
+<p>Week 3 is complete when the system can store and retrieve a full transaction history.</p>
+<section class="resource-box">
+  <h2>Full original file</h2>
+  <p>The original Markdown file is included here:</p>
+  <p><code>resources/worksheets/Week3_Lab_Worksheet.md</code></p>
+</section>
+

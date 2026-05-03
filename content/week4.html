@@ -1,0 +1,338 @@
+<div class="hero">
+  <h1>Week 4 — API Gateway Integration</h1>
+  <p>Single entry point for the ATM backend</p>
+</div>
+<h1 id="week-4-lab-worksheet-api-gateway-full-backend-integration">📘 Week 4 Lab Worksheet — API Gateway + Full Backend Integration</h1>
+<h2 id="single-entry-point-for-the-atm-system">🚪 Single Entry Point for the ATM System</h2>
+<hr>
+<h1 id="objective">🎯 Objective</h1>
+<p>By the end of Week 4, you will:</p>
+<ul>
+<li>build the API Gateway</li>
+<li>make the gateway the only backend entry point</li>
+<li>forward login requests to Auth Service</li>
+<li>forward balance requests to Account Service</li>
+<li>make deposit call both Account Service and Transaction Service</li>
+<li>make withdraw call both Account Service and Transaction Service</li>
+</ul>
+<hr>
+<h1 id="success-criteria">✅ Success Criteria</h1>
+<p>You have successfully completed Week 4 if:</p>
+<ul>
+<li>API Gateway runs on port 4000</li>
+<li>login works through the gateway</li>
+<li>balance works through the gateway</li>
+<li>deposit works through the gateway</li>
+<li>withdraw works through the gateway</li>
+<li>transactions can be retrieved through the gateway</li>
+<li>frontend or client no longer needs to call services directly</li>
+</ul>
+<hr>
+<h1 id="week-4-architecture">🧠 Week 4 Architecture</h1>
+<pre><code>Client
+  ↓
+API Gateway
+  ├── Auth Service
+  ├── Account Service
+  └── Transaction Service</code></pre>
+<hr>
+<h1 id="required-folder-structure">📁 Required Folder Structure</h1>
+<pre><code>api-gateway/
+├── .env
+├── package.json
+└── src/
+    ├── app.js
+    ├── controllers/
+    │   └── gatewayController.js
+    └── routes/
+        └── gatewayRoutes.js</code></pre>
+<hr>
+<h1 id="task-1-prepare-api-gateway">🟦 Task 1 — Prepare API Gateway</h1>
+<p>Go to the gateway folder:</p>
+<pre><code>cd api-gateway
+mkdir -p src/controllers src/routes</code></pre>
+<h2 id="create-env">Create `.env`</h2>
+<h3 id="file-api-gateway-env">File: `api-gateway/.env`</h3>
+<pre><code>PORT=4000
+AUTH_SERVICE_URL=http://localhost:4001
+ACCOUNT_SERVICE_URL=http://localhost:4002
+TRANSACTION_SERVICE_URL=http://localhost:4003</code></pre>
+<hr>
+<h2 id="update-package-json">Update `package.json`</h2>
+<h3 id="file-api-gateway-package-json">File: `api-gateway/package.json`</h3>
+<pre><code>{
+  &quot;name&quot;: &quot;api-gateway&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;main&quot;: &quot;src/app.js&quot;,
+  &quot;scripts&quot;: {
+    &quot;start&quot;: &quot;node src/app.js&quot;,
+    &quot;dev&quot;: &quot;node src/app.js&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;axios&quot;: &quot;^1.7.2&quot;,
+    &quot;cors&quot;: &quot;^2.8.5&quot;,
+    &quot;dotenv&quot;: &quot;^16.4.5&quot;,
+    &quot;express&quot;: &quot;^4.19.2&quot;
+  }
+}</code></pre>
+<hr>
+<h1 id="task-2-create-gateway-controller">🟦 Task 2 — Create Gateway Controller</h1>
+<h3 id="file-api-gateway-src-controllers-gatewaycontroller-js">File: `api-gateway/src/controllers/gatewayController.js`</h3>
+<pre><code>const axios = require(&quot;axios&quot;);
+
+exports.login = async (req, res) =&gt; {
+  try {
+    const response = await axios.post(
+      `${process.env.AUTH_SERVICE_URL}/api/auth/login`,
+      req.body
+    );
+
+    return res.json(response.data);
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({
+      success: false,
+      message: &quot;Gateway login failed&quot;,
+      error: error.response?.data || error.message
+    });
+  }
+};
+
+exports.getBalance = async (req, res) =&gt; {
+  try {
+    const response = await axios.get(
+      `${process.env.ACCOUNT_SERVICE_URL}/api/account/balance/${req.params.accountNumber}`
+    );
+
+    return res.json(response.data);
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({
+      success: false,
+      message: &quot;Gateway balance failed&quot;,
+      error: error.response?.data || error.message
+    });
+  }
+};
+
+exports.deposit = async (req, res) =&gt; {
+  try {
+    const balanceResponse = await axios.post(
+      `${process.env.ACCOUNT_SERVICE_URL}/api/account/deposit`,
+      req.body
+    );
+
+    await axios.post(
+      `${process.env.TRANSACTION_SERVICE_URL}/api/transactions`,
+      {
+        accountNumber: req.body.accountNumber,
+        type: &quot;deposit&quot;,
+        amount: req.body.amount
+      }
+    );
+
+    return res.json(balanceResponse.data);
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({
+      success: false,
+      message: &quot;Gateway deposit failed&quot;,
+      error: error.response?.data || error.message
+    });
+  }
+};
+
+exports.withdraw = async (req, res) =&gt; {
+  try {
+    const balanceResponse = await axios.post(
+      `${process.env.ACCOUNT_SERVICE_URL}/api/account/withdraw`,
+      req.body
+    );
+
+    await axios.post(
+      `${process.env.TRANSACTION_SERVICE_URL}/api/transactions`,
+      {
+        accountNumber: req.body.accountNumber,
+        type: &quot;withdraw&quot;,
+        amount: req.body.amount
+      }
+    );
+
+    return res.json(balanceResponse.data);
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({
+      success: false,
+      message: &quot;Gateway withdraw failed&quot;,
+      error: error.response?.data || error.message
+    });
+  }
+};
+
+exports.getTransactions = async (req, res) =&gt; {
+  try {
+    const response = await axios.get(
+      `${process.env.TRANSACTION_SERVICE_URL}/api/transactions/${req.params.accountNumber}`
+    );
+
+    return res.json(response.data);
+  } catch (error) {
+    return res.status(error.response?.status || 500).json({
+      success: false,
+      message: &quot;Gateway transactions failed&quot;,
+      error: error.response?.data || error.message
+    });
+  }
+};</code></pre>
+<h3 id="what-this-does">What this does</h3>
+<ul>
+<li>forwards requests to the correct service</li>
+<li>coordinates deposit and withdraw across two services</li>
+<li>returns downstream errors clearly</li>
+</ul>
+<hr>
+<h1 id="task-3-create-gateway-routes">🟦 Task 3 — Create Gateway Routes</h1>
+<h3 id="file-api-gateway-src-routes-gatewayroutes-js">File: `api-gateway/src/routes/gatewayRoutes.js`</h3>
+<pre><code>const express = require(&quot;express&quot;);
+const router = express.Router();
+const gatewayController = require(&quot;../controllers/gatewayController&quot;);
+
+router.post(&quot;/login&quot;, gatewayController.login);
+router.get(&quot;/balance/:accountNumber&quot;, gatewayController.getBalance);
+router.post(&quot;/deposit&quot;, gatewayController.deposit);
+router.post(&quot;/withdraw&quot;, gatewayController.withdraw);
+router.get(&quot;/transactions/:accountNumber&quot;, gatewayController.getTransactions);
+
+module.exports = router;</code></pre>
+<hr>
+<h1 id="task-4-create-gateway-app">🟦 Task 4 — Create Gateway App</h1>
+<h3 id="file-api-gateway-src-app-js">File: `api-gateway/src/app.js`</h3>
+<pre><code>const express = require(&quot;express&quot;);
+const cors = require(&quot;cors&quot;);
+const dotenv = require(&quot;dotenv&quot;);
+const gatewayRoutes = require(&quot;./routes/gatewayRoutes&quot;);
+
+dotenv.config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.get(&quot;/health&quot;, (req, res) =&gt; {
+  res.json({
+    service: &quot;api-gateway&quot;,
+    status: &quot;running&quot;
+  });
+});
+
+app.use(&quot;/api&quot;, gatewayRoutes);
+
+app.listen(process.env.PORT, () =&gt; {
+  console.log(`🚀 API Gateway running on port ${process.env.PORT}`);
+});</code></pre>
+<hr>
+<h1 id="task-5-start-all-backend-services">🟦 Task 5 — Start All Backend Services</h1>
+<p>Open separate terminals and start:</p>
+<h2 id="auth-service">Auth Service</h2>
+<pre><code>cd auth-service
+npm start</code></pre>
+<h2 id="account-service">Account Service</h2>
+<pre><code>cd account-service
+npm start</code></pre>
+<h2 id="transaction-service">Transaction Service</h2>
+<pre><code>cd transaction-service
+npm start</code></pre>
+<h2 id="api-gateway">API Gateway</h2>
+<pre><code>cd api-gateway
+npm start</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Auth Service running</li>
+<li>[ ] Account Service running</li>
+<li>[ ] Transaction Service running</li>
+<li>[ ] API Gateway running</li>
+</ul>
+<hr>
+<h1 id="task-6-test-all-gateway-endpoints">🟦 Task 6 — Test All Gateway Endpoints</h1>
+<p>From now on, test through the API Gateway.</p>
+<h2 id="1-login-through-gateway">1. Login through gateway</h2>
+<pre><code>POST http://localhost:4000/api/login
+Content-Type: application/json</code></pre>
+<h3 id="body">Body</h3>
+<pre><code>{
+  &quot;username&quot;: &quot;student1&quot;,
+  &quot;pin&quot;: &quot;1234&quot;
+}</code></pre>
+<hr>
+<h2 id="2-balance-through-gateway">2. Balance through gateway</h2>
+<pre><code>GET http://localhost:4000/api/balance/ACC001</code></pre>
+<hr>
+<h2 id="3-deposit-through-gateway">3. Deposit through gateway</h2>
+<pre><code>POST http://localhost:4000/api/deposit
+Content-Type: application/json</code></pre>
+<h3 id="body">Body</h3>
+<pre><code>{
+  &quot;accountNumber&quot;: &quot;ACC001&quot;,
+  &quot;amount&quot;: 200
+}</code></pre>
+<p>Expected:</p>
+<ul>
+<li>balance increases</li>
+<li>new deposit transaction is created</li>
+</ul>
+<hr>
+<h2 id="4-withdraw-through-gateway">4. Withdraw through gateway</h2>
+<pre><code>POST http://localhost:4000/api/withdraw
+Content-Type: application/json</code></pre>
+<h3 id="body">Body</h3>
+<pre><code>{
+  &quot;accountNumber&quot;: &quot;ACC001&quot;,
+  &quot;amount&quot;: 100
+}</code></pre>
+<p>Expected:</p>
+<ul>
+<li>balance decreases</li>
+<li>new withdrawal transaction is created</li>
+</ul>
+<hr>
+<h2 id="5-transaction-history-through-gateway">5. Transaction history through gateway</h2>
+<pre><code>GET http://localhost:4000/api/transactions/ACC001</code></pre>
+<p>Expected:</p>
+<ul>
+<li>transaction list returned from Transaction Service through the gateway</li>
+</ul>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Login works through gateway</li>
+<li>[ ] Balance works through gateway</li>
+<li>[ ] Deposit works through gateway</li>
+<li>[ ] Withdraw works through gateway</li>
+<li>[ ] Transaction history works through gateway</li>
+</ul>
+<hr>
+<h1 id="reflection-questions">🧪 Reflection Questions</h1>
+<ol>
+<li>Why is an API Gateway useful in a microservices system?</li>
+<li>Why does deposit need to call two services?</li>
+<li>Why should clients use the gateway instead of calling services directly?</li>
+<li>What happens if one downstream service fails?</li>
+</ol>
+<hr>
+<h1 id="milestone-gateway-must-pass">🚧 Milestone Gateway (Must Pass)</h1>
+<p>Before moving to Week 5:</p>
+<ul>
+<li>[ ] API Gateway uses routes and controller structure</li>
+<li>[ ] Gateway forwards login correctly</li>
+<li>[ ] Gateway forwards balance correctly</li>
+<li>[ ] Gateway deposit updates balance and writes transaction</li>
+<li>[ ] Gateway withdraw updates balance and writes transaction</li>
+<li>[ ] Gateway retrieves transaction history</li>
+<li>[ ] No direct service calls are needed from the client</li>
+<li>[ ] Code committed to Git</li>
+</ul>
+<hr>
+<h1 id="final-note">🎯 Final Note</h1>
+<p>Week 4 is complete when the gateway becomes the single backend entry point.</p>
+<section class="resource-box">
+  <h2>Full original file</h2>
+  <p>The original Markdown file is included here:</p>
+  <p><code>resources/worksheets/Week4_Lab_Worksheet.md</code></p>
+</section>
+
