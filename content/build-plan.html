@@ -1,0 +1,293 @@
+<div class="hero">
+  <h1>Build Plan</h1>
+  <p>Seven-week DevOps course overview</p>
+</div>
+<h1 id="atm-devops-project-build-plan">🚀 ATM DevOps Project Build Plan</h1>
+<h2 id="7-week-project-based-course">7-Week Project-Based Course</h2>
+<p><strong>React + Microservices (MVC) + CI/CD + Docker + Kubernetes</strong></p>
+<hr>
+<h1 id="1-course-philosophy">🎯 1. Course Philosophy</h1>
+<div class="callout">❗ No exams. No tests. No assignments.</div>
+<div class="callout">✅ You pass by building a working system.</div>
+<hr>
+<h2 id="pass-requirement">✅ PASS REQUIREMENT</h2>
+<p>Students must successfully:</p>
+<ul>
+<li>🧱 build full ATM system</li>
+<li>🔀 use microservices architecture</li>
+<li>🧩 implement MVC properly</li>
+<li>🔗 integrate frontend + backend + DB</li>
+<li>🐳 run system using Docker</li>
+<li>🔄 implement CI/CD pipeline</li>
+<li>☸️ prepare Kubernetes deployment</li>
+<li>🎤 demonstrate final working system</li>
+</ul>
+<hr>
+<h1 id="2-system-architecture">🏗️ 2. System Architecture</h1>
+<pre><code>Frontend (React)
+       ↓
+API Gateway
+       ↓
+---------------------------------
+| Auth | Account | Transaction |
+---------------------------------
+       ↓
+MongoDB</code></pre>
+<hr>
+<h1 id="3-core-concept-mvc">🧠 3. Core Concept: MVC</h1>
+<pre><code>Routes → Controller → Model → Database</code></pre>
+<ul>
+<li><strong>Model</strong> → Data structure</li>
+<li><strong>Controller</strong> → Logic</li>
+<li><strong>Routes</strong> → API endpoints</li>
+<li><strong>App</strong> → Server setup</li>
+</ul>
+<hr>
+<h1 id="4-tech-stack">🧰 4. Tech Stack</h1>
+<h2 id="frontend">🖥️ Frontend</h2>
+<ul>
+<li>React ⚛️</li>
+<li>Vite ⚡</li>
+<li>Axios 🌐</li>
+</ul>
+<h2 id="backend">🧠 Backend</h2>
+<ul>
+<li>Node.js 🟢</li>
+<li>Express 🚂</li>
+<li>MVC 🧩</li>
+</ul>
+<h2 id="database">🗄️ Database</h2>
+<ul>
+<li>MongoDB 🍃</li>
+</ul>
+<h2 id="devops">⚙️ DevOps</h2>
+<ul>
+<li>Git 🧾</li>
+<li>GitHub 🐙</li>
+<li>GitLab CI/CD 🔄</li>
+<li>Docker 🐳</li>
+<li>Docker Hub 📦</li>
+<li>Kubernetes ☸️</li>
+</ul>
+<hr>
+<h1 id="5-project-structure">📁 5. Project Structure</h1>
+<pre><code>atm-devops-project/
+│
+├── frontend/ ⚛️
+├── api-gateway/ 🚪
+├── auth-service/ 🔐
+├── account-service/ 💰
+├── transaction-service/ 📊
+│
+├── docker-compose.yml 🐳
+├── k8s/ ☸️
+├── docs/ 📄
+├── .gitlab-ci.yml 🔄
+└── README.md</code></pre>
+<hr>
+<h1 id="6-team-roles">👥 6. Team Roles</h1>
+<ul>
+<li>🧑‍💼 Project Manager</li>
+<li>🎨 Frontend Developer</li>
+<li>🔐 Auth Developer</li>
+<li>💰 Account Developer</li>
+<li>📊 Transaction Developer</li>
+<li>⚙️ DevOps Engineer</li>
+</ul>
+<hr>
+<h1 id="7-milestone-map">🗺️ 7. Milestone Map</h1>
+<p>| Week | Milestone |</p>
+<p>|------|----------|</p>
+<p>| 1️⃣ | All services run |</p>
+<p>| 2️⃣ | Auth + Account (MVC) |</p>
+<p>| 3️⃣ | Transactions + MongoDB |</p>
+<p>| 4️⃣ | API Gateway integration |</p>
+<p>| 5️⃣ | Full frontend working |</p>
+<p>| 6️⃣ | Docker + CI/CD |</p>
+<p>| 7️⃣ | Kubernetes + Final Demo |</p>
+<hr>
+<h1 id="week-1-setup-foundation">🟦 WEEK 1 — Setup &amp; Foundation</h1>
+<h2 id="goal">🎯 Goal</h2>
+<p>All services start successfully</p>
+<h2 id="build">🧱 Build</h2>
+<ul>
+<li>folder structure</li>
+<li>Git repo</li>
+<li>base servers</li>
+<li>frontend app</li>
+</ul>
+<h2 id="success-state">✅ Success State</h2>
+<ul>
+<li>all services run</li>
+<li><code>/health</code> works</li>
+<li>frontend loads</li>
+</ul>
+<h2 id="milestone-gateway">🚧 Milestone Gateway</h2>
+<p>✔ services start</p>
+<p>✔ no crashes</p>
+<p>✔ repo created</p>
+<hr>
+<h1 id="week-2-auth-account-mvc">🟦 WEEK 2 — Auth + Account (MVC)</h1>
+<h2 id="goal">🎯 Goal</h2>
+<p>Build real backend logic</p>
+<h2 id="auth-service">🔐 Auth Service</h2>
+<ul>
+<li>login endpoint</li>
+</ul>
+<h2 id="account-service">💰 Account Service</h2>
+<ul>
+<li>balance</li>
+<li>deposit</li>
+<li>withdraw</li>
+</ul>
+<h2 id="concept">🧠 Concept</h2>
+<pre><code>Request → Route → Controller → Model → DB</code></pre>
+<h2 id="success-state">✅ Success State</h2>
+<ul>
+<li>login works</li>
+<li>balance works</li>
+<li>deposit works</li>
+<li>withdraw works</li>
+</ul>
+<h2 id="milestone-gateway">🚧 Milestone Gateway</h2>
+<p>✔ MVC structure</p>
+<p>✔ MongoDB connected</p>
+<p>✔ data persists</p>
+<hr>
+<h1 id="week-3-transactions-database">🟦 WEEK 3 — Transactions + Database</h1>
+<h2 id="goal">🎯 Goal</h2>
+<p>Track all money movements</p>
+<h2 id="build">📊 Build</h2>
+<ul>
+<li>transaction schema</li>
+<li>create transaction</li>
+<li>get history</li>
+</ul>
+<h2 id="concept">🧠 Concept</h2>
+<pre><code>Deposit → Save Transaction → Retrieve History</code></pre>
+<h2 id="success-state">✅ Success State</h2>
+<ul>
+<li>transactions saved</li>
+<li>history visible</li>
+<li>sorted newest first</li>
+</ul>
+<h2 id="milestone-gateway">🚧 Milestone Gateway</h2>
+<p>✔ transaction records correct</p>
+<p>✔ DB working</p>
+<p>✔ API working</p>
+<hr>
+<h1 id="week-4-api-gateway">🟦 WEEK 4 — API Gateway</h1>
+<h2 id="goal">🎯 Goal</h2>
+<p>Single entry point</p>
+<h2 id="gateway-handles">🚪 Gateway Handles</h2>
+<ul>
+<li>login</li>
+<li>balance</li>
+<li>deposit</li>
+<li>withdraw</li>
+<li>transactions</li>
+</ul>
+<h2 id="flow">🧠 Flow</h2>
+<pre><code>Frontend → Gateway → Services → DB</code></pre>
+<h2 id="success-state">✅ Success State</h2>
+<ul>
+<li>all calls go through gateway</li>
+<li>deposit triggers transaction record</li>
+</ul>
+<h2 id="milestone-gateway">🚧 Milestone Gateway</h2>
+<p>✔ no direct service calls</p>
+<p>✔ full backend integration</p>
+<hr>
+<h1 id="week-5-frontend-full-atm-ui">🟦 WEEK 5 — Frontend (Full ATM UI)</h1>
+<h2 id="goal">🎯 Goal</h2>
+<p>Complete user experience</p>
+<h2 id="pages">🖥️ Pages</h2>
+<ul>
+<li>Login</li>
+<li>Dashboard</li>
+</ul>
+<h2 id="features">🔧 Features</h2>
+<ul>
+<li>login</li>
+<li>balance display</li>
+<li>deposit</li>
+<li>withdraw</li>
+<li>transactions</li>
+</ul>
+<h2 id="success-state">✅ Success State</h2>
+<ul>
+<li>full ATM flow works in browser</li>
+</ul>
+<h2 id="milestone-gateway">🚧 Milestone Gateway</h2>
+<p>✔ UI connected to backend</p>
+<p>✔ updates reflect instantly</p>
+<hr>
+<h1 id="week-6-docker-ci-cd">🟦 WEEK 6 — Docker + CI/CD</h1>
+<h2 id="goal">🎯 Goal</h2>
+<p>Automate and containerize</p>
+<h2 id="docker">🐳 Docker</h2>
+<ul>
+<li>Dockerfiles</li>
+<li>docker-compose</li>
+</ul>
+<h2 id="ci-cd-pipeline">🔄 CI/CD Pipeline</h2>
+<pre><code>Code Push → Install → Test → Build → Docker Build → Push</code></pre>
+<h2 id="success-state">✅ Success State</h2>
+<ul>
+<li>docker-compose works</li>
+<li>pipeline passes</li>
+</ul>
+<h2 id="milestone-gateway">🚧 Milestone Gateway</h2>
+<p>✔ containers run</p>
+<p>✔ images built</p>
+<p>✔ CI/CD success</p>
+<hr>
+<h1 id="week-7-kubernetes-final-demo">🟦 WEEK 7 — Kubernetes + Final Demo</h1>
+<h2 id="goal">🎯 Goal</h2>
+<p>Production-ready system</p>
+<h2 id="build">☸️ Build</h2>
+<ul>
+<li>deployments</li>
+<li>services</li>
+</ul>
+<h2 id="final-demo">🎤 Final Demo</h2>
+<p>Students must show:</p>
+<ol>
+<li>login 🔐</li>
+<li>balance 💰</li>
+<li>deposit ➕</li>
+<li>withdraw ➖</li>
+<li>transactions 📊</li>
+<li>Docker 🐳</li>
+<li>CI/CD 🔄</li>
+<li>Kubernetes ☸️</li>
+</ol>
+<h2 id="success-state">✅ Success State</h2>
+<ul>
+<li>full system works</li>
+<li>deployment ready</li>
+</ul>
+<h2 id="final-gateway">🚧 Final Gateway</h2>
+<p>✔ full working app</p>
+<p>✔ DevOps pipeline complete</p>
+<p>✔ team can explain system</p>
+<hr>
+<h1 id="final-checklist">🧪 Final Checklist</h1>
+<p>✔ MVC used</p>
+<p>✔ Microservices working</p>
+<p>✔ Gateway used</p>
+<p>✔ MongoDB connected</p>
+<p>✔ Frontend working</p>
+<p>✔ Docker working</p>
+<p>✔ CI/CD working</p>
+<p>✔ Kubernetes ready</p>
+<hr>
+<h1 id="final-message">🎯 Final Message</h1>
+<div class="callout">Build it. Run it. Show it.</div>
+<div class="callout">That is how you pass this course.</div>
+<section class="resource-box">
+  <h2>Full original file</h2>
+  <p>The original Markdown file is included here:</p>
+  <p><code>resources/worksheets/BuildPlan.md</code></p>
+</section>
+

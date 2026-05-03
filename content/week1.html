@@ -1,0 +1,255 @@
+<div class="hero">
+  <h1>Week 1 — Setup &amp; Foundation</h1>
+  <p>Create project structure, Git repo, services and React frontend</p>
+</div>
+<h1 id="week-1-lab-worksheet">📘 Week 1 Lab Worksheet</h1>
+<h2 id="atm-devops-project-student-guide">ATM DevOps Project — Student Guide</h2>
+<hr>
+<h1 id="objective">🎯 Objective</h1>
+<p>By the end of this lab, you will:</p>
+<ul>
+<li>Create the full project structure</li>
+<li>Initialize Git</li>
+<li>Build 4 backend services</li>
+<li>Build the API Gateway</li>
+<li>Create a React frontend</li>
+<li>Run all services successfully</li>
+</ul>
+<hr>
+<h1 id="learning-outcomes">🧠 Learning Outcomes</h1>
+<p>By completing this lab, you should understand:</p>
+<ul>
+<li>What a microservices architecture looks like</li>
+<li>How multiple services run independently</li>
+<li>Basic Express server setup</li>
+<li>How frontend and backend are separated</li>
+</ul>
+<hr>
+<h1 id="pre-lab-checklist">📋 Pre-Lab Checklist</h1>
+<p>Before you begin, ensure you have:</p>
+<ul>
+<li>[ ] Node.js installed (<code>node -v</code>)</li>
+<li>[ ] npm installed (<code>npm -v</code>)</li>
+<li>[ ] Git installed (<code>git --version</code>)</li>
+<li>[ ] VS Code or any IDE</li>
+</ul>
+<hr>
+<h1 id="task-1-create-project">🟦 Task 1 — Create Project</h1>
+<h3 id="instructions">Instructions</h3>
+<p>Run:</p>
+<pre><code>mkdir atm-devops-project
+cd atm-devops-project</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Folder created</li>
+<li>[ ] Inside project folder</li>
+</ul>
+<hr>
+<h1 id="task-2-initialize-git">🟦 Task 2 — Initialize Git</h1>
+<pre><code>git init</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Git initialized</li>
+<li>[ ] <code>.git</code> folder created</li>
+</ul>
+<hr>
+<h1 id="task-3-create-structure">🟦 Task 3 — Create Structure</h1>
+<pre><code>mkdir frontend api-gateway auth-service account-service transaction-service docs k8s</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] All folders created</li>
+</ul>
+<hr>
+<h1 id="task-4-create-gitignore">🟦 Task 4 — Create `.gitignore`</h1>
+<p>Create file:</p>
+<pre><code>node_modules/
+.env
+dist/
+build/
+coverage/</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] <code>.gitignore</code> exists</li>
+</ul>
+<hr>
+<h1 id="task-5-auth-service">🟦 Task 5 — Auth Service</h1>
+<h3 id="setup">Setup</h3>
+<pre><code>cd auth-service
+npm init -y
+npm install express cors dotenv mongoose
+mkdir src</code></pre>
+<h3 id="create-file-src-app-js">Create file: `src/app.js`</h3>
+<pre><code>const express = require(&quot;express&quot;);
+const cors = require(&quot;cors&quot;);
+
+const app = express();
+const PORT = 4001;
+
+app.use(cors());
+app.use(express.json());
+
+app.get(&quot;/health&quot;, (req, res) =&gt; {
+  res.json({ service: &quot;auth-service&quot;, status: &quot;running&quot; });
+});
+
+app.listen(PORT, () =&gt; {
+  console.log(`Auth service running on port ${PORT}`);
+});</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Service starts</li>
+<li>[ ] <code>/health</code> works</li>
+</ul>
+<hr>
+<h1 id="task-6-account-service">🟦 Task 6 — Account Service</h1>
+<pre><code>cd ../account-service
+npm init -y
+npm install express cors dotenv mongoose
+mkdir src</code></pre>
+<h3 id="create-file-src-app-js">Create file: `src/app.js`</h3>
+<pre><code>const express = require(&quot;express&quot;);
+const cors = require(&quot;cors&quot;);
+
+const app = express();
+const PORT = 4002;
+
+app.use(cors());
+app.use(express.json());
+
+app.get(&quot;/health&quot;, (req, res) =&gt; {
+  res.json({ service: &quot;account-service&quot;, status: &quot;running&quot; });
+});
+
+app.listen(PORT, () =&gt; {
+  console.log(`Account service running on port ${PORT}`);
+});</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Service starts</li>
+<li>[ ] <code>/health</code> works</li>
+</ul>
+<hr>
+<h1 id="task-7-transaction-service">🟦 Task 7 — Transaction Service</h1>
+<pre><code>cd ../transaction-service
+npm init -y
+npm install express cors dotenv mongoose
+mkdir src</code></pre>
+<h3 id="create-file-src-app-js">Create file: `src/app.js`</h3>
+<pre><code>const express = require(&quot;express&quot;);
+const cors = require(&quot;cors&quot;);
+
+const app = express();
+const PORT = 4003;
+
+app.use(cors());
+app.use(express.json());
+
+app.get(&quot;/health&quot;, (req, res) =&gt; {
+  res.json({ service: &quot;transaction-service&quot;, status: &quot;running&quot; });
+});
+
+app.listen(PORT, () =&gt; {
+  console.log(`Transaction service running on port ${PORT}`);
+});</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Service starts</li>
+<li>[ ] <code>/health</code> works</li>
+</ul>
+<hr>
+<h1 id="task-8-api-gateway">🟦 Task 8 — API Gateway</h1>
+<pre><code>cd ../api-gateway
+npm init -y
+npm install express cors dotenv axios
+mkdir src</code></pre>
+<h3 id="create-file-src-app-js">Create file: `src/app.js`</h3>
+<pre><code>const express = require(&quot;express&quot;);
+const cors = require(&quot;cors&quot;);
+
+const app = express();
+const PORT = 4000;
+
+app.use(cors());
+app.use(express.json());
+
+app.get(&quot;/health&quot;, (req, res) =&gt; {
+  res.json({ service: &quot;api-gateway&quot;, status: &quot;running&quot; });
+});
+
+app.listen(PORT, () =&gt; {
+  console.log(`API Gateway running on port ${PORT}`);
+});</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Gateway runs</li>
+<li>[ ] <code>/health</code> works</li>
+</ul>
+<hr>
+<h1 id="task-9-frontend">🟦 Task 9 — Frontend</h1>
+<pre><code>cd ../frontend
+npm create vite@latest . -- --template react
+npm install</code></pre>
+<h3 id="edit-src-app-jsx">Edit `src/App.jsx`</h3>
+<pre><code>function App() {
+  return (
+    &lt;div&gt;
+      &lt;h1&gt;ATM DevOps Project&lt;/h1&gt;
+      &lt;p&gt;Week 1 running successfully&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+
+export default App;</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Frontend starts</li>
+<li>[ ] Page loads in browser</li>
+</ul>
+<hr>
+<h1 id="task-10-run-everything">🟦 Task 10 — Run Everything</h1>
+<p>Open separate terminals and run:</p>
+<pre><code>npm start</code></pre>
+<p>Frontend:</p>
+<pre><code>npm run dev</code></pre>
+<hr>
+<h1 id="task-11-test-endpoints">🌐 Task 11 — Test Endpoints</h1>
+<p>Test:</p>
+<ul>
+<li>http://localhost:4001/health</li>
+<li>http://localhost:4002/health</li>
+<li>http://localhost:4003/health</li>
+<li>http://localhost:4000/health</li>
+</ul>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] All endpoints return JSON</li>
+</ul>
+<hr>
+<h1 id="reflection-questions">🧪 Reflection Questions</h1>
+<p>Answer these:</p>
+<ol>
+<li>What is a microservice?</li>
+<li>Why do we separate services instead of one big server?</li>
+<li>What does `/health` endpoint help with?</li>
+<li>What is the role of the API Gateway?</li>
+</ol>
+<hr>
+<h1 id="milestone-gateway-must-pass">🚧 Milestone Gateway (Must Pass)</h1>
+<p>Before moving to Week 2:</p>
+<ul>
+<li>[ ] All services run</li>
+<li>[ ] No errors</li>
+<li>[ ] All <code>/health</code> endpoints work</li>
+<li>[ ] Frontend loads</li>
+<li>[ ] Code committed to Git</li>
+</ul>
+<hr>
+<h1 id="final-note">🎯 Final Note</h1>
+<p>If your system runs successfully — you pass Week 1.</p>
+<p>If not — fix it before moving forward.</p>
+<section class="resource-box">
+  <h2>Full original file</h2>
+  <p>The original Markdown file is included here:</p>
+  <p><code>resources/worksheets/Week1_Lab_Worksheet.md</code></p>
+</section>
+

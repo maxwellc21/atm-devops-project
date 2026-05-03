@@ -1,0 +1,311 @@
+<div class="hero">
+  <h1>Week 7 — Kubernetes + Final Demo</h1>
+  <p>Deploy and demonstrate the system</p>
+</div>
+<h1 id="week-7-lab-worksheet-kubernetes-final-demo">📘 Week 7 Lab Worksheet — Kubernetes + Final Demo</h1>
+<h2 id="deploy-the-atm-system-and-demonstrate-the-full-project">☸️ Deploy the ATM system and demonstrate the full project</h2>
+<hr>
+<h1 id="objective">🎯 Objective</h1>
+<p>By the end of Week 7, you will:</p>
+<ul>
+<li>create Kubernetes manifests</li>
+<li>deploy backend services to Kubernetes</li>
+<li>expose the API Gateway</li>
+<li>verify pods and services</li>
+<li>complete the final demonstration</li>
+</ul>
+<hr>
+<h1 id="success-criteria">✅ Success Criteria</h1>
+<p>You have successfully completed Week 7 if:</p>
+<ul>
+<li>Kubernetes manifests are created</li>
+<li>pods start successfully</li>
+<li>services are reachable</li>
+<li>API Gateway is exposed</li>
+<li>the full ATM system can be demonstrated</li>
+<li>the team can explain the architecture and DevOps flow</li>
+</ul>
+<hr>
+<h1 id="week-7-kubernetes-view">🧠 Week 7 Kubernetes View</h1>
+<pre><code>Kubernetes Cluster
+  ├── Auth Service Pod
+  ├── Account Service Pod
+  ├── Transaction Service Pod
+  ├── API Gateway Pod
+  └── MongoDB Pod / external DB</code></pre>
+<hr>
+<h1 id="suggested-kubernetes-files">📁 Suggested Kubernetes Files</h1>
+<pre><code>k8s/
+├── auth-deployment.yaml
+├── account-deployment.yaml
+├── transaction-deployment.yaml
+├── gateway-deployment.yaml
+└── mongodb-deployment.yaml</code></pre>
+<hr>
+<h1 id="task-1-create-auth-service-manifest">🟦 Task 1 — Create Auth Service manifest</h1>
+<h3 id="file-k8s-auth-deployment-yaml">File: `k8s/auth-deployment.yaml`</h3>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: yourdockerhubusername/auth-service:latest
+          ports:
+            - containerPort: 4001
+          env:
+            - name: PORT
+              value: &quot;4001&quot;
+            - name: MONGO_URI
+              value: &quot;mongodb://mongodb:27017/atmdb&quot;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 4001
+      targetPort: 4001</code></pre>
+<hr>
+<h1 id="task-2-create-account-service-manifest">🟦 Task 2 — Create Account Service manifest</h1>
+<h3 id="file-k8s-account-deployment-yaml">File: `k8s/account-deployment.yaml`</h3>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: account-service
+  template:
+    metadata:
+      labels:
+        app: account-service
+    spec:
+      containers:
+        - name: account-service
+          image: yourdockerhubusername/account-service:latest
+          ports:
+            - containerPort: 4002
+          env:
+            - name: PORT
+              value: &quot;4002&quot;
+            - name: MONGO_URI
+              value: &quot;mongodb://mongodb:27017/atmdb&quot;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: account-service
+spec:
+  selector:
+    app: account-service
+  ports:
+    - port: 4002
+      targetPort: 4002</code></pre>
+<hr>
+<h1 id="task-3-create-transaction-service-manifest">🟦 Task 3 — Create Transaction Service manifest</h1>
+<h3 id="file-k8s-transaction-deployment-yaml">File: `k8s/transaction-deployment.yaml`</h3>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transaction-service
+  template:
+    metadata:
+      labels:
+        app: transaction-service
+    spec:
+      containers:
+        - name: transaction-service
+          image: yourdockerhubusername/transaction-service:latest
+          ports:
+            - containerPort: 4003
+          env:
+            - name: PORT
+              value: &quot;4003&quot;
+            - name: MONGO_URI
+              value: &quot;mongodb://mongodb:27017/atmdb&quot;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transaction-service
+spec:
+  selector:
+    app: transaction-service
+  ports:
+    - port: 4003
+      targetPort: 4003</code></pre>
+<hr>
+<h1 id="task-4-create-api-gateway-manifest">🟦 Task 4 — Create API Gateway manifest</h1>
+<h3 id="file-k8s-gateway-deployment-yaml">File: `k8s/gateway-deployment.yaml`</h3>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: yourdockerhubusername/api-gateway:latest
+          ports:
+            - containerPort: 4000
+          env:
+            - name: PORT
+              value: &quot;4000&quot;
+            - name: AUTH_SERVICE_URL
+              value: &quot;http://auth-service:4001&quot;
+            - name: ACCOUNT_SERVICE_URL
+              value: &quot;http://account-service:4002&quot;
+            - name: TRANSACTION_SERVICE_URL
+              value: &quot;http://transaction-service:4003&quot;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+spec:
+  selector:
+    app: api-gateway
+  type: NodePort
+  ports:
+    - port: 4000
+      targetPort: 4000
+      nodePort: 30080</code></pre>
+<hr>
+<h1 id="task-5-optional-mongodb-manifest">🟦 Task 5 — Optional MongoDB manifest</h1>
+<h3 id="file-k8s-mongodb-deployment-yaml">File: `k8s/mongodb-deployment.yaml`</h3>
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:6
+          ports:
+            - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - port: 27017
+      targetPort: 27017</code></pre>
+<hr>
+<h1 id="task-6-apply-manifests">🟦 Task 6 — Apply manifests</h1>
+<p>From the project root:</p>
+<pre><code>kubectl apply -f k8s/</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Manifests applied successfully</li>
+</ul>
+<hr>
+<h1 id="task-7-verify-kubernetes-resources">🟦 Task 7 — Verify Kubernetes resources</h1>
+<p>Check pods:</p>
+<pre><code>kubectl get pods</code></pre>
+<p>Check services:</p>
+<pre><code>kubectl get services</code></pre>
+<p>Describe a pod if needed:</p>
+<pre><code>kubectl describe pod &lt;pod-name&gt;</code></pre>
+<p>View logs if needed:</p>
+<pre><code>kubectl logs &lt;pod-name&gt;</code></pre>
+<h3 id="checkpoint">✔ Checkpoint</h3>
+<ul>
+<li>[ ] Pods running</li>
+<li>[ ] Services created</li>
+<li>[ ] API Gateway exposed</li>
+</ul>
+<hr>
+<h1 id="task-8-final-demonstration">🟦 Task 8 — Final Demonstration</h1>
+<p>Your team must demonstrate:</p>
+<ol>
+<li>system startup</li>
+<li>login with seeded user</li>
+<li>balance retrieval</li>
+<li>deposit</li>
+<li>updated balance</li>
+<li>withdraw</li>
+<li>updated balance</li>
+<li>transaction history</li>
+<li>Docker containers or images</li>
+<li>GitLab CI/CD pipeline</li>
+<li>Kubernetes deployment or validated manifests</li>
+</ol>
+<h3 id="demo-test-credentials">Demo test credentials</h3>
+<ul>
+<li>username: <code>student1</code></li>
+<li>pin: <code>1234</code></li>
+<li>accountNumber: <code>ACC001</code></li>
+</ul>
+<hr>
+<h1 id="reflection-questions">🧪 Reflection Questions</h1>
+<ol>
+<li>What is the difference between Docker Compose and Kubernetes?</li>
+<li>Why do we use Deployments and Services in Kubernetes?</li>
+<li>What does `nodePort` do for the API Gateway?</li>
+<li>Why is Kubernetes useful for microservices?</li>
+</ol>
+<hr>
+<h1 id="final-milestone-gateway-course-completion">🚧 Final Milestone Gateway (Course Completion)</h1>
+<p>To pass the course, the team must show:</p>
+<ul>
+<li>[ ] Week 1 structure and running services complete</li>
+<li>[ ] Week 2 MVC and MongoDB complete</li>
+<li>[ ] Week 3 transaction tracking complete</li>
+<li>[ ] Week 4 API Gateway integration complete</li>
+<li>[ ] Week 5 frontend complete</li>
+<li>[ ] Week 6 Docker and CI/CD complete</li>
+<li>[ ] Week 7 Kubernetes or deployment-ready manifests complete</li>
+<li>[ ] Final demo successful</li>
+<li>[ ] Team can explain the architecture and workflow</li>
+</ul>
+<hr>
+<h1 id="final-note">🎯 Final Note</h1>
+<p>The course is complete when the ATM system works end to end and the team can demonstrate both the software and the DevOps process.</p>
+<section class="resource-box">
+  <h2>Full original file</h2>
+  <p>The original Markdown file is included here:</p>
+  <p><code>resources/worksheets/Week7_Lab_Worksheet.md</code></p>
+</section>
+

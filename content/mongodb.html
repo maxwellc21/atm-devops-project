@@ -1,0 +1,772 @@
+<div class="hero">
+  <h1>MongoDB Setup Guide</h1>
+  <p>Offline local MongoDB and online MongoDB Atlas</p>
+</div>
+<h1 id="complete-mongodb-setup-guide-offline-local-mongodb-and-online-mongodb-atlas">Complete MongoDB Setup Guide: Offline Local MongoDB and Online MongoDB Atlas</h1>
+<p>This guide provides two complete versions of the same MVC ATM backend:</p>
+<ol>
+<li><strong>Offline Version</strong> — uses local MongoDB on your computer.</li>
+<li><strong>Online Version</strong> — uses MongoDB Atlas cloud database.</li>
+</ol>
+<p>The code structure is the same for both versions. The main difference is the MongoDB connection string in the <code>.env</code> file and the connection messages in <code>app.js</code> and <code>seed.js</code>.</p>
+<hr>
+<h1 id="part-a-offline-version-using-local-mongodb">PART A: OFFLINE VERSION — USING LOCAL MONGODB</h1>
+<p>Use this version when you want the system to run using MongoDB installed on your own computer.</p>
+<hr>
+<h2 id="a1-offline-folder-structure">A1. Offline Folder Structure</h2>
+<h3 id="auth-service">Auth Service</h3>
+<pre><code>auth-service/
+├── .env
+├── package.json
+└── src/
+    ├── app.js
+    ├── controllers/
+    │   └── authController.js
+    ├── models/
+    │   └── User.js
+    ├── routes/
+    │   └── authRoutes.js
+    └── seed.js</code></pre>
+<h3 id="account-service">Account Service</h3>
+<pre><code>account-service/
+├── .env
+├── package.json
+└── src/
+    ├── app.js
+    ├── controllers/
+    │   └── accountController.js
+    ├── models/
+    │   └── Account.js
+    ├── routes/
+    │   └── accountRoutes.js
+    └── seed.js</code></pre>
+<hr>
+<h1 id="a2-offline-auth-service-complete-code">A2. OFFLINE AUTH SERVICE COMPLETE CODE</h1>
+<hr>
+<h2 id="file-auth-service-env">File: `auth-service/.env`</h2>
+<pre><code>PORT=4001
+MONGO_URI=mongodb://localhost:27017/atmdb</code></pre>
+<h3 id="explanation">Explanation</h3>
+<p>This connects the Auth Service to a local MongoDB database called <code>atmdb</code>.</p>
+<hr>
+<h2 id="file-auth-service-package-json">File: `auth-service/package.json`</h2>
+<pre><code>{
+  &quot;name&quot;: &quot;auth-service&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;main&quot;: &quot;src/app.js&quot;,
+  &quot;scripts&quot;: {
+    &quot;start&quot;: &quot;node src/app.js&quot;,
+    &quot;dev&quot;: &quot;node src/app.js&quot;,
+    &quot;seed&quot;: &quot;node src/seed.js&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;cors&quot;: &quot;^2.8.5&quot;,
+    &quot;dotenv&quot;: &quot;^16.4.5&quot;,
+    &quot;express&quot;: &quot;^4.19.2&quot;,
+    &quot;mongoose&quot;: &quot;^8.5.1&quot;
+  }
+}</code></pre>
+<hr>
+<h2 id="file-auth-service-src-models-user-js">File: `auth-service/src/models/User.js`</h2>
+<pre><code>const mongoose = require(&quot;mongoose&quot;);
+
+const userSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true
+    },
+    pin: {
+      type: String,
+      required: true
+    },
+    accountNumber: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true
+    }
+  },
+  {
+    timestamps: true
+  }
+);
+
+module.exports = mongoose.model(&quot;User&quot;, userSchema);</code></pre>
+<hr>
+<h2 id="file-auth-service-src-controllers-authcontroller-js">File: `auth-service/src/controllers/authController.js`</h2>
+<pre><code>const User = require(&quot;../models/User&quot;);
+
+exports.login = async (req, res) =&gt; {
+  try {
+    const { username, pin } = req.body;
+
+    if (!username || !pin) {
+      return res.status(400).json({
+        success: false,
+        message: &quot;Username and PIN are required&quot;
+      });
+    }
+
+    const user = await User.findOne({ username, pin });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: &quot;Invalid username or PIN&quot;
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: &quot;Login successful&quot;,
+      user: {
+        username: user.username,
+        accountNumber: user.accountNumber
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: &quot;Server error during login&quot;,
+      error: error.message
+    });
+  }
+};</code></pre>
+<hr>
+<h2 id="file-auth-service-src-routes-authroutes-js">File: `auth-service/src/routes/authRoutes.js`</h2>
+<pre><code>const express = require(&quot;express&quot;);
+const router = express.Router();
+const authController = require(&quot;../controllers/authController&quot;);
+
+router.post(&quot;/login&quot;, authController.login);
+
+module.exports = router;</code></pre>
+<hr>
+<h2 id="file-auth-service-src-app-js">File: `auth-service/src/app.js`</h2>
+<pre><code>const express = require(&quot;express&quot;);
+const cors = require(&quot;cors&quot;);
+const dotenv = require(&quot;dotenv&quot;);
+const mongoose = require(&quot;mongoose&quot;);
+const authRoutes = require(&quot;./routes/authRoutes&quot;);
+
+dotenv.config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() =&gt; {
+    console.log(&quot;✅ Auth Service connected to local MongoDB&quot;);
+  })
+  .catch((err) =&gt; {
+    console.error(&quot;❌ Auth Service local MongoDB error:&quot;, err.message);
+  });
+
+app.get(&quot;/health&quot;, (req, res) =&gt; {
+  res.json({
+    service: &quot;auth-service&quot;,
+    status: &quot;running&quot;,
+    database: &quot;Local MongoDB&quot;
+  });
+});
+
+app.use(&quot;/api/auth&quot;, authRoutes);
+
+const PORT = process.env.PORT || 4001;
+
+app.listen(PORT, () =&gt; {
+  console.log(`🚀 Auth Service running on port ${PORT}`);
+});</code></pre>
+<hr>
+<h2 id="file-auth-service-src-seed-js">File: `auth-service/src/seed.js`</h2>
+<pre><code>const mongoose = require(&quot;mongoose&quot;);
+const dotenv = require(&quot;dotenv&quot;);
+const User = require(&quot;./models/User&quot;);
+
+dotenv.config();
+
+const seedUsers = async () =&gt; {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+
+    console.log(&quot;✅ Connected to local MongoDB for Auth seeding&quot;);
+
+    await User.deleteMany({});
+
+    await User.create({
+      username: &quot;student1&quot;,
+      pin: &quot;1234&quot;,
+      accountNumber: &quot;ACC001&quot;
+    });
+
+    console.log(&quot;✅ Auth users seeded successfully&quot;);
+    process.exit();
+  } catch (error) {
+    console.error(&quot;❌ Failed to seed auth users:&quot;, error.message);
+    process.exit(1);
+  }
+};
+
+seedUsers();</code></pre>
+<hr>
+<h1 id="a3-offline-account-service-complete-code">A3. OFFLINE ACCOUNT SERVICE COMPLETE CODE</h1>
+<hr>
+<h2 id="file-account-service-env">File: `account-service/.env`</h2>
+<pre><code>PORT=4002
+MONGO_URI=mongodb://localhost:27017/atmdb</code></pre>
+<h3 id="explanation">Explanation</h3>
+<p>This connects the Account Service to the same local MongoDB database called <code>atmdb</code>.</p>
+<hr>
+<h2 id="file-account-service-package-json">File: `account-service/package.json`</h2>
+<pre><code>{
+  &quot;name&quot;: &quot;account-service&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;main&quot;: &quot;src/app.js&quot;,
+  &quot;scripts&quot;: {
+    &quot;start&quot;: &quot;node src/app.js&quot;,
+    &quot;dev&quot;: &quot;node src/app.js&quot;,
+    &quot;seed&quot;: &quot;node src/seed.js&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;cors&quot;: &quot;^2.8.5&quot;,
+    &quot;dotenv&quot;: &quot;^16.4.5&quot;,
+    &quot;express&quot;: &quot;^4.19.2&quot;,
+    &quot;mongoose&quot;: &quot;^8.5.1&quot;
+  }
+}</code></pre>
+<hr>
+<h2 id="file-account-service-src-models-account-js">File: `account-service/src/models/Account.js`</h2>
+<pre><code>const mongoose = require(&quot;mongoose&quot;);
+
+const accountSchema = new mongoose.Schema(
+  {
+    accountNumber: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true
+    },
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    balance: {
+      type: Number,
+      default: 0
+    }
+  },
+  {
+    timestamps: true
+  }
+);
+
+module.exports = mongoose.model(&quot;Account&quot;, accountSchema);</code></pre>
+<hr>
+<h2 id="file-account-service-src-controllers-accountcontroller-js">File: `account-service/src/controllers/accountController.js`</h2>
+<pre><code>const Account = require(&quot;../models/Account&quot;);
+
+exports.getBalance = async (req, res) =&gt; {
+  try {
+    const { accountNumber } = req.params;
+
+    const account = await Account.findOne({ accountNumber });
+
+    if (!account) {
+      return res.status(404).json({
+        success: false,
+        message: &quot;Account not found&quot;
+      });
+    }
+
+    return res.json({
+      success: true,
+      account: {
+        accountNumber: account.accountNumber,
+        name: account.name,
+        balance: account.balance
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: &quot;Failed to get balance&quot;,
+      error: error.message
+    });
+  }
+};
+
+exports.deposit = async (req, res) =&gt; {
+  try {
+    const { accountNumber, amount } = req.body;
+
+    if (!accountNumber || amount === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: &quot;Account number and amount are required&quot;
+      });
+    }
+
+    const numericAmount = Number(amount);
+
+    if (Number.isNaN(numericAmount) || numericAmount &lt;= 0) {
+      return res.status(400).json({
+        success: false,
+        message: &quot;Amount must be a number greater than 0&quot;
+      });
+    }
+
+    const account = await Account.findOne({ accountNumber });
+
+    if (!account) {
+      return res.status(404).json({
+        success: false,
+        message: &quot;Account not found&quot;
+      });
+    }
+
+    account.balance += numericAmount;
+    await account.save();
+
+    return res.json({
+      success: true,
+      message: &quot;Deposit successful&quot;,
+      account: {
+        accountNumber: account.accountNumber,
+        balance: account.balance
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: &quot;Deposit failed&quot;,
+      error: error.message
+    });
+  }
+};
+
+exports.withdraw = async (req, res) =&gt; {
+  try {
+    const { accountNumber, amount } = req.body;
+
+    if (!accountNumber || amount === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: &quot;Account number and amount are required&quot;
+      });
+    }
+
+    const numericAmount = Number(amount);
+
+    if (Number.isNaN(numericAmount) || numericAmount &lt;= 0) {
+      return res.status(400).json({
+        success: false,
+        message: &quot;Amount must be a number greater than 0&quot;
+      });
+    }
+
+    const account = await Account.findOne({ accountNumber });
+
+    if (!account) {
+      return res.status(404).json({
+        success: false,
+        message: &quot;Account not found&quot;
+      });
+    }
+
+    if (account.balance &lt; numericAmount) {
+      return res.status(400).json({
+        success: false,
+        message: &quot;Insufficient funds&quot;
+      });
+    }
+
+    account.balance -= numericAmount;
+    await account.save();
+
+    return res.json({
+      success: true,
+      message: &quot;Withdrawal successful&quot;,
+      account: {
+        accountNumber: account.accountNumber,
+        balance: account.balance
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: &quot;Withdrawal failed&quot;,
+      error: error.message
+    });
+  }
+};</code></pre>
+<hr>
+<h2 id="file-account-service-src-routes-accountroutes-js">File: `account-service/src/routes/accountRoutes.js`</h2>
+<pre><code>const express = require(&quot;express&quot;);
+const router = express.Router();
+const accountController = require(&quot;../controllers/accountController&quot;);
+
+router.get(&quot;/balance/:accountNumber&quot;, accountController.getBalance);
+router.post(&quot;/deposit&quot;, accountController.deposit);
+router.post(&quot;/withdraw&quot;, accountController.withdraw);
+
+module.exports = router;</code></pre>
+<hr>
+<h2 id="file-account-service-src-app-js">File: `account-service/src/app.js`</h2>
+<pre><code>const express = require(&quot;express&quot;);
+const cors = require(&quot;cors&quot;);
+const dotenv = require(&quot;dotenv&quot;);
+const mongoose = require(&quot;mongoose&quot;);
+const accountRoutes = require(&quot;./routes/accountRoutes&quot;);
+
+dotenv.config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() =&gt; {
+    console.log(&quot;✅ Account Service connected to local MongoDB&quot;);
+  })
+  .catch((err) =&gt; {
+    console.error(&quot;❌ Account Service local MongoDB error:&quot;, err.message);
+  });
+
+app.get(&quot;/health&quot;, (req, res) =&gt; {
+  res.json({
+    service: &quot;account-service&quot;,
+    status: &quot;running&quot;,
+    database: &quot;Local MongoDB&quot;
+  });
+});
+
+app.use(&quot;/api/account&quot;, accountRoutes);
+
+const PORT = process.env.PORT || 4002;
+
+app.listen(PORT, () =&gt; {
+  console.log(`🚀 Account Service running on port ${PORT}`);
+});</code></pre>
+<hr>
+<h2 id="file-account-service-src-seed-js">File: `account-service/src/seed.js`</h2>
+<pre><code>const mongoose = require(&quot;mongoose&quot;);
+const dotenv = require(&quot;dotenv&quot;);
+const Account = require(&quot;./models/Account&quot;);
+
+dotenv.config();
+
+const seedAccounts = async () =&gt; {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+
+    console.log(&quot;✅ Connected to local MongoDB for Account seeding&quot;);
+
+    await Account.deleteMany({});
+
+    await Account.create({
+      accountNumber: &quot;ACC001&quot;,
+      name: &quot;Student One&quot;,
+      balance: 1000
+    });
+
+    console.log(&quot;✅ Accounts seeded successfully&quot;);
+    process.exit();
+  } catch (error) {
+    console.error(&quot;❌ Failed to seed accounts:&quot;, error.message);
+    process.exit(1);
+  }
+};
+
+seedAccounts();</code></pre>
+<hr>
+<h1 id="a4-offline-setup-steps-with-check-gates">A4. OFFLINE SETUP STEPS WITH CHECK GATES</h1>
+<hr>
+<h2 id="check-gate-a1-start-local-mongodb">Check Gate A1: Start Local MongoDB</h2>
+<p>Run:</p>
+<pre><code>mongod</code></pre>
+<p>If you use MongoDB Compass, make sure MongoDB is running locally.</p>
+<p>Expected local database address:</p>
+<pre><code>mongodb://localhost:27017/atmdb</code></pre>
+<p>✅ Pass this gate if MongoDB is running locally.</p>
+<hr>
+<h2 id="check-gate-a2-install-auth-service-dependencies">Check Gate A2: Install Auth Service Dependencies</h2>
+<pre><code>cd auth-service
+npm install</code></pre>
+<p>✅ Pass this gate if <code>node_modules</code> is created and there are no major errors.</p>
+<hr>
+<h2 id="check-gate-a3-seed-auth-data">Check Gate A3: Seed Auth Data</h2>
+<pre><code>npm run seed</code></pre>
+<p>Expected:</p>
+<pre><code>✅ Connected to local MongoDB for Auth seeding
+✅ Auth users seeded successfully</code></pre>
+<p>✅ Pass this gate if the user is added to local MongoDB.</p>
+<hr>
+<h2 id="check-gate-a4-start-auth-service">Check Gate A4: Start Auth Service</h2>
+<pre><code>npm start</code></pre>
+<p>Expected:</p>
+<pre><code>✅ Auth Service connected to local MongoDB
+🚀 Auth Service running on port 4001</code></pre>
+<p>✅ Pass this gate if Auth Service is running.</p>
+<hr>
+<h2 id="check-gate-a5-install-account-service-dependencies">Check Gate A5: Install Account Service Dependencies</h2>
+<p>Open another terminal:</p>
+<pre><code>cd account-service
+npm install</code></pre>
+<p>✅ Pass this gate if dependencies install successfully.</p>
+<hr>
+<h2 id="check-gate-a6-seed-account-data">Check Gate A6: Seed Account Data</h2>
+<pre><code>npm run seed</code></pre>
+<p>Expected:</p>
+<pre><code>✅ Connected to local MongoDB for Account seeding
+✅ Accounts seeded successfully</code></pre>
+<p>✅ Pass this gate if the account is added to local MongoDB.</p>
+<hr>
+<h2 id="check-gate-a7-start-account-service">Check Gate A7: Start Account Service</h2>
+<pre><code>npm start</code></pre>
+<p>Expected:</p>
+<pre><code>✅ Account Service connected to local MongoDB
+🚀 Account Service running on port 4002</code></pre>
+<p>✅ Pass this gate if Account Service is running.</p>
+<hr>
+<h2 id="check-gate-a8-test-offline-endpoints">Check Gate A8: Test Offline Endpoints</h2>
+<h3 id="auth-health">Auth health</h3>
+<pre><code>GET http://localhost:4001/health</code></pre>
+<p>Expected:</p>
+<pre><code>{
+  &quot;service&quot;: &quot;auth-service&quot;,
+  &quot;status&quot;: &quot;running&quot;,
+  &quot;database&quot;: &quot;Local MongoDB&quot;
+}</code></pre>
+<h3 id="account-health">Account health</h3>
+<pre><code>GET http://localhost:4002/health</code></pre>
+<p>Expected:</p>
+<pre><code>{
+  &quot;service&quot;: &quot;account-service&quot;,
+  &quot;status&quot;: &quot;running&quot;,
+  &quot;database&quot;: &quot;Local MongoDB&quot;
+}</code></pre>
+<h3 id="login">Login</h3>
+<pre><code>POST http://localhost:4001/api/auth/login</code></pre>
+<p>Body:</p>
+<pre><code>{
+  &quot;username&quot;: &quot;student1&quot;,
+  &quot;pin&quot;: &quot;1234&quot;
+}</code></pre>
+<p>Expected:</p>
+<pre><code>{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Login successful&quot;,
+  &quot;user&quot;: {
+    &quot;username&quot;: &quot;student1&quot;,
+    &quot;accountNumber&quot;: &quot;ACC001&quot;
+  }
+}</code></pre>
+<h3 id="balance">Balance</h3>
+<pre><code>GET http://localhost:4002/api/account/balance/ACC001</code></pre>
+<p>Expected:</p>
+<pre><code>{
+  &quot;success&quot;: true,
+  &quot;account&quot;: {
+    &quot;accountNumber&quot;: &quot;ACC001&quot;,
+    &quot;name&quot;: &quot;Student One&quot;,
+    &quot;balance&quot;: 1000
+  }
+}</code></pre>
+<hr>
+<h1 id="part-b-online-version-using-mongodb-atlas">PART B: ONLINE VERSION — USING MONGODB ATLAS</h1>
+<p>Use this version when you want the system to connect to MongoDB Atlas online database.</p>
+<hr>
+<h1 id="b1-online-auth-service-complete-code">B1. ONLINE AUTH SERVICE COMPLETE CODE</h1>
+<hr>
+<h2 id="file-auth-service-env">File: `auth-service/.env`</h2>
+<pre><code>PORT=4001
+MONGO_URI=mongodb+srv://maxiecletus_db_user:YOUR_PASSWORD@cluster0.s0c6lz6.mongodb.net/myatm?retryWrites=true&amp;w=majority&amp;appName=Cluster0</code></pre>
+<h3 id="important">Important</h3>
+<p>Replace:</p>
+<pre><code>YOUR_PASSWORD</code></pre>
+<p>with your real MongoDB Atlas database password.</p>
+<p>Example:</p>
+<pre><code>PORT=4001
+MONGO_URI=mongodb+srv://maxiecletus_db_user:yourRealPassword@cluster0.s0c6lz6.mongodb.net/myatm?retryWrites=true&amp;w=majority&amp;appName=Cluster0</code></pre>
+<hr>
+<h2 id="file-auth-service-package-json">File: `auth-service/package.json`</h2>
+<pre><code>{
+  &quot;name&quot;: &quot;auth-service&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;main&quot;: &quot;src/app.js&quot;,
+  &quot;scripts&quot;: {
+    &quot;start&quot;: &quot;node src/app.js&quot;,
+    &quot;dev&quot;: &quot;node src/app.js&quot;,
+    &quot;seed&quot;: &quot;node src/seed.js&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;cors&quot;: &quot;^2.8.5&quot;,
+    &quot;dotenv&quot;: &quot;^16.4.5&quot;,
+    &quot;express&quot;: &quot;^4.19.2&quot;,
+    &quot;mongoose&quot;: &quot;^8.5.1&quot;
+  }
+}</code></pre>
+<hr>
+<h2 id="file-auth-service-src-models-user-js">File: `auth-service/src/models/User.js`</h2>
+<pre><code>const mongoose = require(&quot;mongoose&quot;);
+
+const userSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true
+    },
+    pin: {
+      type: String,
+      required: true
+    },
+    accountNumber: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true
+    }
+  },
+  {
+    timestamps: true
+  }
+);
+
+module.exports = mongoose.model(&quot;User&quot;, userSchema);</code></pre>
+<hr>
+<h2 id="file-auth-service-src-controllers-authcontroller-js">File: `auth-service/src/controllers/authController.js`</h2>
+<pre><code>const User = require(&quot;../models/User&quot;);
+
+exports.login = async (req, res) =&gt; {
+  try {
+    const { username, pin } = req.body;
+
+    if (!username || !pin) {
+      return res.status(400).json({
+        success: false,
+        message: &quot;Username and PIN are required&quot;
+      });
+    }
+
+    const user = await User.findOne({ username, pin });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: &quot;Invalid username or PIN&quot;
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: &quot;Login successful&quot;,
+      user: {
+        username: user.username,
+        accountNumber: user.accountNumber
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: &quot;Server error during login&quot;,
+      error: error.message
+    });
+  }
+};</code></pre>
+<hr>
+<h2 id="file-auth-service-src-routes-authroutes-js">File: `auth-service/src/routes/authRoutes.js`</h2>
+<pre><code>const express = require(&quot;express&quot;);
+const router = express.Router();
+const authController = require(&quot;../controllers/authController&quot;);
+
+router.post(&quot;/login&quot;, authController.login);
+
+module.exports = router;</code></pre>
+<hr>
+<h2 id="file-auth-service-src-app-js">File: `auth-service/src/app.js`</h2>
+<pre><code>const express = require(&quot;express&quot;);
+const cors = require(&quot;cors&quot;);
+const dotenv = require(&quot;dotenv&quot;);
+const mongoose = require(&quot;mongoose&quot;);
+const authRoutes = require(&quot;./routes/authRoutes&quot;);
+
+dotenv.config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() =&gt; {
+    console.log(&quot;✅ Auth Service connected to MongoDB Atlas&quot;);
+  })
+  .catch((err) =&gt; {
+    console.error(&quot;❌ Auth Service MongoDB Atlas connection error:&quot;, err.message);
+  });
+
+app.get(&quot;/health&quot;, (req, res) =&gt; {
+  res.json({
+    service: &quot;auth-service&quot;,
+    status: &quot;running&quot;,
+    database: &quot;MongoDB Atlas&quot;
+  });
+});
+
+app.use(&quot;/api/auth&quot;, authRoutes);
+
+const PORT = process.env.PORT || 4001;
+
+app.listen(PORT, () =&gt; {
+  console.log(`🚀 Auth Service running on port ${PORT}`);
+});</code></pre>
+<hr>
+<h2 id="file-auth-service-src-seed-js">File: `auth-service/src/seed.js`</h2>
+<pre><code>const mongoose = require(&quot;mongoose&quot;);
+const dotenv = require(&quot;dotenv&quot;);
+const User = require(&quot;./models/User&quot;);
+
+dotenv.config();
+
+const seedUsers = async () =&gt; {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+
+    console.log(&quot;✅ Connected to MongoDB Atlas for Auth seeding&quot;);
+
+    await User.deleteMany({});
+
+    await User.create({
+      username: &quot;student1&quot;,
+      pin: &quot;1234&quot;,
+      accountNumber: &quot;ACC001&quot;
+    });
+
+    console.log(&quot;✅ Auth users seeded successfully&quot;);
+    process.exit();
+  } catch (error) {
+    console.error(&quot;❌ Failed to seed auth users:&quot;, error.message);
+    process.exit(1);
+  }
+};
+
+seedUsers();</code></pre>
+<div class="notice">Full original worksheet is available in <code>resources/worksheets</code>.</div>
+<section class="resource-box">
+  <h2>Full original file</h2>
+  <p>The original Markdown file is included here:</p>
+  <p><code>resources/worksheets/MongoDB_Setup_Guide.md</code></p>
+</section>
+
